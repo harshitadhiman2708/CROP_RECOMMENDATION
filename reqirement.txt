@@ -1,0 +1,45 @@
+import streamlit as st
+import pandas as pd
+import joblib
+
+# Load model and encoder
+model = joblib.load("crop_recommendation_model.pkl")
+encoder = joblib.load("label_encoder.pkl")
+
+st.set_page_config(page_title="Crop Recommendation", page_icon="🌾")
+
+st.title("🌾 Crop Recommendation System")
+
+st.write("Enter soil and weather details to get the recommended crop.")
+
+nitrogen = st.number_input("Nitrogen", min_value=0.0)
+phosphorus = st.number_input("Phosphorus", min_value=0.0)
+potassium = st.number_input("Potassium", min_value=0.0)
+temperature = st.number_input("Temperature (°C)")
+humidity = st.number_input("Humidity (%)")
+ph = st.number_input("pH Value")
+rainfall = st.number_input("Rainfall (mm)")
+
+if st.button("Predict Crop"):
+
+    sample = pd.DataFrame(
+        [[nitrogen, phosphorus, potassium, temperature, humidity, ph, rainfall]],
+        columns=[
+            "Nitrogen",
+            "Phosphorus",
+            "Potassium",
+            "Temperature",
+            "Humidity",
+            "pH_Value",
+            "Rainfall"
+        ]
+    )
+
+    prediction = model.predict(sample)
+    crop = encoder.inverse_transform(prediction)[0]
+
+    st.success(f"🌱 Recommended Crop: {crop}")
+
+    if hasattr(model, "predict_proba"):
+        confidence = model.predict_proba(sample).max() * 100
+        st.info(f"Prediction Confidence: {confidence:.2f}%")
